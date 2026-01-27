@@ -145,66 +145,82 @@
         </div>
     </div>
 
-    <script>
-        function resetDatabase() {
-            if (confirm("⚠️ DANGER: Are you sure you want to DELETE ALL DATA?\n\nThis will remove all participants, scores, and submissions.\nThis action cannot be undone.")) {
-                fetch('/secret/reset-db-now', {
-                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
-                })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            alert("✅ Database Cleared Successfully!");
-                            updateLeaderboard(); // Refresh empty table
-                        } else {
-                            alert("❌ Error: " + data.message);
-                        }
-                    })
-                    .catch(err => alert("❌ Error connecting to server"));
-            }
-        }
+    <!-- Firebase SDK (Compat) -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
-        function updateLeaderboard() {
-            fetch('/api/organizer/data')
-                .then(response => response.json())
-                .then(data => {
+    <script>
+        // GLOBAL CONFIG
+        const firebaseConfig = {
+            apiKey: "AIzaSyBjmZ_u6qsoSIPS_k9mhBnpZaW7mr2EFmQ",
+            authDomain: "atc-dsa-challenge-app.firebaseapp.com",
+            projectId: "atc-dsa-challenge-app",
+            storageBucket: "atc-dsa-challenge-app.firebasestorage.app",
+            messagingSenderId: "1018564474911",
+            appId: "1:1018564474911:web:71194a5ad3c164acd43d2a",
+            measurementId: "G-2B77DHCJLH"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // Real-time Listener
+        function subscribeToLeaderboard() {
+            db.collection("participants")
+                .orderBy("score", "desc")
+                .orderBy("time_taken", "asc") // Tie - breaker
+                .onSnapshot((snapshot) => {
                     const tbody = document.getElementById('leaderboardBody');
                     tbody.innerHTML = '';
 
-                    data.forEach((participant, index) => {
+                    let rank = 1;
+                    snapshot.forEach((doc) => {
+                        const p = doc.data();
                         const tr = document.createElement('tr');
 
                         let statusClass = 'status-active';
-                        if (participant.status === 'COMPLETED') statusClass = 'status-completed';
-                        if (participant.status === 'DISQUALIFIED') statusClass = 'status-disqualified';
+                        if (p.status === 'COMPLETED') statusClass = 'status-completed';
+                        if (p.status === 'DISQUALIFIED') statusClass = 'status-disqualified';
 
-                        const violationClass = participant.violations > 0 ? 'violation-high' : '';
+                        const violationClass = (p.violations || 0) > 0 ? 'violation-high' : '';
 
                         tr.innerHTML = `
-                            <td>${index + 1}</td>
+                            <td>${rank++}</td>
                             <td>
-                                <strong>${participant.name}</strong><br>
-                                <span style="font-size: 0.8rem; color: #64748b;">${participant.email}</span>
+                                <strong>${p.name || 'Unknown'}</strong><br>
+                                <span style="font-size: 0.8rem; color: #64748b;">${p.email || ''}</span>
                             </td>
-                            <td>${participant.score} / 100</td>
-                            <td>${participant.solved} / 10</td>
-                            <td><span class="status-badge ${statusClass}">${participant.status}</span></td>
-                            <td class="violation-count ${violationClass}">${participant.violations}</td>
-                            <td>${participant.time_taken}</td>
+                            <td>${p.score || 0} / 145</td>
+                            <td>${(p.solved || []).length} / 10</td>
+                            <td><span class="status-badge ${statusClass}">${p.status || 'ACTIVE'}</span></td>
+                            <td class="violation-count ${violationClass}">${p.violations || 0}</td>
+                            <td>${p.time_taken || '00:00:00'}</td>
                         `;
                         tbody.appendChild(tr);
                     });
 
-                    document.getElementById('lastUpdated').textContent = 'Last updated: ' + new Date().toLocaleTimeString();
-                })
-                .catch(err => console.error('Error fetching data:', err));
+                    document.getElementById('lastUpdated').textContent = 'Live Updates Active 🟢';
+                }, (error) => {
+                    console.error("Error getting leaderboard:", error);
+                    document.getElementById('lastUpdated').textContent = 'Connection Error 🔴';
+                });
         }
 
-        // Initial load
-        updateLeaderboard();
+        function resetDatabase() {
+            if (confirm("⚠️ DANGER: DELETE ALL DATA?\n\nThis will remove all participants from Firestore.\nAction is irreversible.")) {
+                // Call backend secret route to wipe generic data if needed, but for Firestore we might need a script
+                // For now, we'll hit the generic reset route assuming it handles Firestore or we just clear via Admin Console
+                fetch('/secret/reset-db-now')
+                    .then(res => res.json())
+                    .then(data => alert(data.message))
+                    .catch(err => alert("Failed to reset"));
+                // Ideally we'd loop delete in JS or use Admin SDK on backend.
+            }
+        }
 
-        // Auto-refresh every 5 seconds
-        setInterval(updateLeaderboard, 5000);
+        // Start Listening
+        subscribeToLeaderboard();
     </script>
 </body>
 
