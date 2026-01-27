@@ -27,6 +27,7 @@ def register():
         )
         session['participant_id'] = participant_id
         session['name'] = data['name']
+        session['email'] = data.get('email', '')
         
         # Start contest
         success, message = service.start_contest(participant_id)
@@ -42,7 +43,7 @@ def contest():
     """Contest interface"""
     if 'participant_id' not in session:
         return redirect('/')
-    return render_template('contest.html', name=session.get('name', 'Participant'), participant_id=session.get('participant_id'))
+    return render_template('contest.html', name=session.get('name', 'Participant'), email=session.get('email', ''), participant_id=session.get('participant_id'))
 
 @app.route('/completion')
 def completion():

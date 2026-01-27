@@ -19,6 +19,7 @@ window.addEventListener('DOMContentLoaded', async () => {
             if (!doc.exists) {
                 pRef.set({
                     name: PARTICIPANT_NAME,
+                    email: PARTICIPANT_EMAIL,
                     score: 0,
                     time_taken: 0,
                     solved: []
