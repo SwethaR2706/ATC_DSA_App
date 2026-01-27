@@ -188,10 +188,8 @@
 
                         tr.innerHTML = `
                             <td>${rank++}</td>
-                            <td>
-                                <strong>${p.name || 'Unknown'}</strong><br>
-                                <span style="font-size: 0.8rem; color: #64748b;">${p.email || ''}</span>
-                            </td>
+                            <td><strong>${p.name || 'Unknown'}</strong></td>
+                            <td><span style="font-size: 0.8rem; color: #64748b;">${p.email || ''}</span></td>
                             <td>${p.score || 0} / 145</td>
                             <td>${(p.solved || []).length} / 10</td>
                             <td><span class="status-badge ${statusClass}">${p.status || 'ACTIVE'}</span></td>
