@@ -206,15 +206,41 @@
                 });
         }
 
-        function resetDatabase() {
-            if (confirm("⚠️ DANGER: DELETE ALL DATA?\n\nThis will remove all participants from Firestore.\nAction is irreversible.")) {
-                // Call backend secret route to wipe generic data if needed, but for Firestore we might need a script
-                // For now, we'll hit the generic reset route assuming it handles Firestore or we just clear via Admin Console
-                fetch('/secret/reset-db-now')
-                    .then(res => res.json())
-                    .then(data => alert(data.message))
-                    .catch(err => alert("Failed to reset"));
-                // Ideally we'd loop delete in JS or use Admin SDK on backend.
+        async function resetDatabase() {
+            if (!confirm("⚠️ DANGER: DELETE ALL DATA?\n\nThis will wipe everything (SQL + Firestore).\nCannot be undone.")) return;
+
+            document.getElementById('lastUpdated').textContent = 'Resetting...';
+
+            try {
+                // 1. Reset SQL (Backend)
+                await fetch('/secret/reset-db-now');
+
+                // 2. Reset Firestore (Frontend Client SDK)
+                // We must delete documents individually as client SDK doesn't support 'delete collection'
+                const batchsize = 500;
+
+                const deleteCollection = async (collectionPath) => {
+                    const snapshot = await db.collection(collectionPath).get();
+                    const batch = db.batch();
+                    let count = 0;
+                    snapshot.forEach(doc => {
+                        batch.delete(doc.ref);
+                        count++;
+                    });
+                    if (count > 0) await batch.commit();
+                    console.log(`Deleted ${count} from ${collectionPath}`);
+                };
+
+                await deleteCollection('participants');
+                await deleteCollection('submissions');
+
+                alert("✅ System Reset Successful!");
+                window.location.reload();
+
+            } catch (err) {
+                console.error(err);
+                alert("Reset Failed: " + err.message);
+                document.getElementById('lastUpdated').textContent = 'Reset Failed';
             }
         }
 
