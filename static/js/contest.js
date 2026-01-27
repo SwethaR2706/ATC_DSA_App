@@ -153,7 +153,14 @@ function setupAntiCheating() {
 }
 
 // Handle cheating violation
+let processingViolation = false;
 async function handleViolation() {
+    if (processingViolation) return;
+    processingViolation = true;
+
+    // Reset flag after delay
+    setTimeout(() => { processingViolation = false; }, 2000);
+
     try {
         const response = await fetch('/api/contest/violation', { method: 'POST' });
         const result = await response.json();
@@ -175,6 +182,14 @@ async function handleViolation() {
                 fullscreenEnabled = false;
                 document.getElementById('warningModal').style.display = 'none'; // Close warning if open
                 document.getElementById('disqualifyModal').style.display = 'flex';
+
+                // SYNC DISQUALIFIED TO FIRESTORE
+                if (typeof db !== 'undefined') {
+                    db.collection('participants').doc(PARTICIPANT_ID).update({
+                        status: 'DISQUALIFIED',
+                        end_time: firebase.firestore.FieldValue.serverTimestamp()
+                    }).catch(e => console.error("FS Disqualify Sync Error", e));
+                }
 
                 // End contest locally slightly after
                 setTimeout(async () => {
