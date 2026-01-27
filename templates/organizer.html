@@ -186,6 +186,26 @@
 
                         const violationClass = (p.violations || 0) > 0 ? 'violation-high' : '';
 
+                        let timeDisplay = '00:00:00';
+                        if (p.start_time) {
+                            const start = p.start_time.toDate();
+                            const end = p.end_time ? p.end_time.toDate() : new Date();
+
+                            // If active, use current time (live ticker effect requires re-render, but for now snapshots work)
+                            // Ideally, we'd update this every second, but Firestore snapshot triggers on change.
+                            // To make it truly live, we need a setInterval on the page that reads these start times.
+                            // For now, let's just show the snapshot time diff.
+
+                            const diffMs = end - start;
+                            if (diffMs > 0) {
+                                const totalSecs = Math.floor(diffMs / 1000);
+                                const h = Math.floor(totalSecs / 3600).toString().padStart(2, '0');
+                                const m = Math.floor((totalSecs % 3600) / 60).toString().padStart(2, '0');
+                                const s = (totalSecs % 60).toString().padStart(2, '0');
+                                timeDisplay = `${h}:${m}:${s}`;
+                            }
+                        }
+
                         tr.innerHTML = `
                             <td>${rank++}</td>
                             <td><strong>${p.name || 'Unknown'}</strong></td>
@@ -194,7 +214,7 @@
                             <td>${(p.solved || []).length} / 10</td>
                             <td><span class="status-badge ${statusClass}">${p.status || 'ACTIVE'}</span></td>
                             <td class="violation-count ${violationClass}">${p.violations || 0}</td>
-                            <td>${p.time_taken || '00:00:00'}</td>
+                            <td>${timeDisplay}</td>
                         `;
                         tbody.appendChild(tr);
                     });

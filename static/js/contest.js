@@ -58,6 +58,14 @@ window.addEventListener('DOMContentLoaded', async () => {
         startTimer();
         setupAntiCheating();
 
+        // SYNC START TO FIRESTORE
+        if (typeof db !== 'undefined') {
+            db.collection('participants').doc(PARTICIPANT_ID).update({
+                status: 'ACTIVE',
+                start_time: firebase.firestore.FieldValue.serverTimestamp()
+            }).catch(e => console.error("FS Start Sync Error", e));
+        }
+
         // Start strict fullscreen check loop
         setInterval(checkFullscreenState, 500);
     });
@@ -154,6 +162,13 @@ async function handleViolation() {
             const count = result.violation_count;
             document.getElementById('topViolations').textContent = count;
             document.getElementById('violationCount').textContent = count;
+
+            // SYNC VIOLATION TO FIRESTORE
+            if (typeof db !== 'undefined') {
+                db.collection('participants').doc(PARTICIPANT_ID).update({
+                    violations: count
+                }).catch(e => console.error("FS Violation Sync Error", e));
+            }
 
             if (result.status === 'DISQUALIFIED') {
                 // Disqualify
@@ -708,6 +723,13 @@ async function confirmEndContest() {
 
         // Small delay to ensure fullscreen exit completes
         setTimeout(() => {
+            // SYNC END TO FIRESTORE
+            if (typeof db !== 'undefined') {
+                db.collection('participants').doc(PARTICIPANT_ID).update({
+                    status: 'COMPLETED',
+                    end_time: firebase.firestore.FieldValue.serverTimestamp()
+                }).catch(e => console.error("FS End Sync Error", e));
+            }
             showCompletionMessage();
         }, 100);
     } catch (error) {
