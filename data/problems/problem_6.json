@@ -1,0 +1,42 @@
+{
+    "problem_id": 6,
+    "title": "Longest Substring Without Repeating Characters",
+    "difficulty": "Medium",
+    "marks": 15,
+    "type": "algorithm",
+    "description": "**Problem Statement:**\nGiven a string `s`, find the length of the **longest substring** without repeating characters.\n\nA **substring** is a contiguous non-empty sequence of characters within a string.\n\n**Input Format:**\n- `s`: A string containing English letters, digits, symbols, or spaces.\n\n**Output Format:**\n- An integer representing the length of the longest substring.\n\n**Examples:**\n\n*Example 1:*\n**Input:** `s = \"abcabcbb\"`\n**Output:** `3`\n**Explanation:** The answer is \"abc\", with the length of 3.\n\n*Example 2:*\n**Input:** `s = \"bbbbb\"`\n**Output:** `1`\n**Explanation:** The answer is \"b\", with the length of 1.\n\n*Example 3:*\n**Input:** `s = \"pwwkew\"`\n**Output:** `3`\n**Explanation:** The answer is \"wke\", with the length of 3. Notice that the answer must be a substring, \"pwke\" is a subsequence and not a substring.\n\n**Constraints:**\n- `0 <= s.length <= 5 * 10^4`\n- `s` consists of English letters, digits, symbols and spaces.",
+    "function_signature": {
+        "python": "def solution(s):",
+        "java": "class Solution {\n    public int solution(String s) {\n        \n    }\n}"
+    },
+    "starter_code": {
+        "python": "def solution(s):\n    # Write your code here\n    pass",
+        "java": "class Solution {\n    public int solution(String s) {\n        // Write your code here\n        return 0;\n    }\n}"
+    },
+    "test_cases": [
+        {
+            "input": {
+                "s": "abcabcbb"
+            },
+            "expected_output": 3
+        },
+        {
+            "input": {
+                "s": "bbbbb"
+            },
+            "expected_output": 1
+        },
+        {
+            "input": {
+                "s": "pwwkew"
+            },
+            "expected_output": 3
+        },
+        {
+            "input": {
+                "s": ""
+            },
+            "expected_output": 0
+        }
+    ]
+}

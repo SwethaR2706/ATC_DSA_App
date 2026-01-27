@@ -1,0 +1,60 @@
+{
+  "problem_id": 1,
+  "title": "Two Sum",
+  "difficulty": "Easy",
+  "marks": 10,
+  "type": "algorithm",
+  "description": "**Problem Statement:**\nGiven an array of integers `nums` and an integer `target`, return the *indices* of the two numbers such that they add up to `target`.\n\nYou may assume that each input would have **exactly one solution**, and you may not use the same element twice. You can return the answer in any order.\n\n**Input Format:**\n- `nums`: An array/list of integers (e.g., `[2, 7, 11, 15]`)\n- `target`: An integer value (e.g., `9`)\n\n**Output Format:**\n- An array/list of two integers representing the indices (e.g., `[0, 1]`)\n\n**Examples:**\n\n*Example 1:*\n**Input:** `nums = [2,7,11,15]`, `target = 9`\n**Output:** `[0,1]`\n**Explanation:** Because `nums[0] + nums[1] == 9`, we return `[0, 1]`.\n\n*Example 2:*\n**Input:** `nums = [3,2,4]`, `target = 6`\n**Output:** `[1,2]`\n\n*Example 3:*\n**Input:** `nums = [3,3]`, `target = 6`\n**Output:** `[0,1]`\n\n**Constraints:**\n- `2 <= nums.length <= 10^4`\n- `-10^9 <= nums[i] <= 10^9`\n- `-10^9 <= target <= 10^9`\n- Only one valid answer exists.",
+  "function_signature": {
+    "python": "def solution(nums, target):",
+    "java": "class Solution {\n    public int[] solution(int[] nums, int target) {\n        \n    }\n}"
+  },
+  "starter_code": {
+    "python": "def solution(nums, target):\n    # Write your code here\n    pass",
+    "java": "class Solution {\n    public int[] solution(int[] nums, int target) {\n        // Write your code here\n        return new int[]{}; \n    }\n}"
+  },
+  "test_cases": [
+    {
+      "input": {
+        "nums": [
+          2,
+          7,
+          11,
+          15
+        ],
+        "target": 9
+      },
+      "expected_output": [
+        0,
+        1
+      ]
+    },
+    {
+      "input": {
+        "nums": [
+          3,
+          2,
+          4
+        ],
+        "target": 6
+      },
+      "expected_output": [
+        1,
+        2
+      ]
+    },
+    {
+      "input": {
+        "nums": [
+          3,
+          3
+        ],
+        "target": 6
+      },
+      "expected_output": [
+        0,
+        1
+      ]
+    }
+  ]
+}
