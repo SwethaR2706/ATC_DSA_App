@@ -169,7 +169,7 @@
         function subscribeToLeaderboard() {
             db.collection("participants")
                 .orderBy("score", "desc")
-                .orderBy("time_taken", "asc") // Tie - breaker
+                // .orderBy("time_taken", "asc") // Tie-breaker (Disabled for visibility)
                 .onSnapshot((snapshot) => {
                     const tbody = document.getElementById('leaderboardBody');
                     tbody.innerHTML = '';

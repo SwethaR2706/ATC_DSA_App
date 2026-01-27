@@ -20,6 +20,7 @@ window.addEventListener('DOMContentLoaded', async () => {
                 pRef.set({
                     name: PARTICIPANT_NAME,
                     score: 0,
+                    time_taken: 0,
                     solved: []
                 });
             }
