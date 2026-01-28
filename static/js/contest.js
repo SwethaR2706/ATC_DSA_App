@@ -85,10 +85,16 @@ window.addEventListener('DOMContentLoaded', async () => {
 
         // SYNC START TO FIRESTORE
         if (typeof db !== 'undefined') {
-            db.collection('participants').doc(PARTICIPANT_ID).update({
-                status: 'ACTIVE',
-                start_time: firebase.firestore.FieldValue.serverTimestamp()
-            }).catch(e => console.error("FS Start Sync Error", e));
+            // Only set start_time if it doesn't verify exist locally (synced from DB)
+            // This prevents resetting the timer on page refresh
+            if (!window.contestStartTime) {
+                db.collection('participants').doc(PARTICIPANT_ID).update({
+                    status: 'ACTIVE',
+                    start_time: firebase.firestore.FieldValue.serverTimestamp()
+                }).catch(e => console.error("FS Start Sync Error", e));
+            } else {
+                console.log("Resuming contest, preserving original start time.");
+            }
         }
 
         // Start strict fullscreen check loop
@@ -186,52 +192,51 @@ async function handleViolation() {
     // Reset flag after delay
     setTimeout(() => { processingViolation = false; }, 2000);
 
+    // Local Logic (No Backend API needed)
     try {
-        const response = await fetch('/api/contest/violation', { method: 'POST' });
-        const result = await response.json();
+        // Increment violations locally first
+        violations++;
 
-        if (result.success) {
-            const count = result.violation_count;
-            document.getElementById('topViolations').textContent = count;
-            document.getElementById('violationCount').textContent = count;
+        // SYNC VIOLATION TO FIRESTORE (Serverless)
+        if (typeof db !== 'undefined') {
+            db.collection('participants').doc(PARTICIPANT_ID).update({
+                violations: firebase.firestore.FieldValue.increment(1)
+            }).catch(e => console.error("FS Violation Sync Error", e));
+        }
 
-            // SYNC VIOLATION TO FIRESTORE
+        const count = violations;
+        document.getElementById('topViolations').textContent = count;
+        document.getElementById('violationCount').textContent = count;
+
+        if (count > MAX_VIOLATIONS) {
+            // Disqualify
+            fullscreenEnabled = false;
+            document.getElementById('warningModal').style.display = 'none'; // Close warning if open
+            document.getElementById('disqualifyModal').style.display = 'flex';
+
+            // SYNC DISQUALIFIED TO FIRESTORE
             if (typeof db !== 'undefined') {
                 db.collection('participants').doc(PARTICIPANT_ID).update({
-                    violations: count
-                }).catch(e => console.error("FS Violation Sync Error", e));
+                    status: 'DISQUALIFIED',
+                    end_time: firebase.firestore.FieldValue.serverTimestamp()
+                }).catch(e => console.error("FS Disqualify Sync Error", e));
             }
 
-            if (result.status === 'DISQUALIFIED') {
-                // Disqualify
-                fullscreenEnabled = false;
-                document.getElementById('warningModal').style.display = 'none'; // Close warning if open
-                document.getElementById('disqualifyModal').style.display = 'flex';
-
-                // SYNC DISQUALIFIED TO FIRESTORE
-                if (typeof db !== 'undefined') {
-                    db.collection('participants').doc(PARTICIPANT_ID).update({
-                        status: 'DISQUALIFIED',
-                        end_time: firebase.firestore.FieldValue.serverTimestamp()
-                    }).catch(e => console.error("FS Disqualify Sync Error", e));
+            // End contest locally slightly after
+            setTimeout(async () => {
+                if (document.exitFullscreen) {
+                    try { await document.exitFullscreen(); } catch (e) { }
                 }
+                showCompletionMessage();
+            }, 3000);
+        } else {
+            // Show warning
+            const warningText = count === 1
+                ? 'First warning: Do not switch away from the contest window!'
+                : `Warning ${count}/${MAX_VIOLATIONS}: One more violation and you will be disqualified!`;
 
-                // End contest locally slightly after
-                setTimeout(async () => {
-                    if (document.exitFullscreen) {
-                        try { await document.exitFullscreen(); } catch (e) { }
-                    }
-                    showCompletionMessage();
-                }, 3000);
-            } else {
-                // Show warning
-                const warningText = count === 1
-                    ? 'First warning: Do not switch away from the contest window!'
-                    : `Warning ${count}/${MAX_VIOLATIONS}: One more violation and you will be disqualified!`;
-
-                document.getElementById('warningText').textContent = warningText;
-                document.getElementById('warningModal').style.display = 'flex';
-            }
+            document.getElementById('warningText').textContent = warningText;
+            document.getElementById('warningModal').style.display = 'flex';
         }
     } catch (e) {
         console.error("Error recording violation", e);
