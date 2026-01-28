@@ -41,9 +41,9 @@ def register():
 @app.route('/contest')
 def contest():
     """Contest interface"""
-    if 'participant_id' not in session:
-        return redirect('/')
-    return render_template('contest.html', name=session.get('name', 'Participant'), email=session.get('email', ''), participant_id=session.get('participant_id'))
+    # Client-side Auth (Firebase/LocalStorage) handles security now.
+    # We just serve the page.
+    return render_template('contest.html', name='Participant', email='', participant_id='')
 
 @app.route('/completion')
 def completion():

@@ -39,9 +39,16 @@
         }
 
         // Store Session Info
-        const PARTICIPANT_ID = "{{ participant_id }}";
-        const PARTICIPANT_NAME = "{{ name }}";
-        const PARTICIPANT_EMAIL = "{{ email }}";
+        // Priority: LocalStorage (Client-Side Reg) -> Template (Server-Side Reg)
+        let PARTICIPANT_ID = localStorage.getItem('dsa_participant_id') || "{{ participant_id }}";
+        let PARTICIPANT_NAME = localStorage.getItem('dsa_participant_name') || "{{ name }}";
+        let PARTICIPANT_EMAIL = localStorage.getItem('dsa_participant_email') || "{{ email }}";
+
+        // Auth Check
+        if (!PARTICIPANT_ID || PARTICIPANT_ID === 'None' || PARTICIPANT_ID === '') {
+            console.warn("No ID found, redirecting to login");
+            window.location.href = '/';
+        }
     </script>
 
     <div id="startOverlay"
