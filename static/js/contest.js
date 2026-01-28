@@ -208,7 +208,11 @@ async function handleViolation() {
         document.getElementById('topViolations').textContent = count;
         document.getElementById('violationCount').textContent = count;
 
-        if (count > MAX_VIOLATIONS) {
+        if (count >= MAX_VIOLATIONS) {
+            // Cap display at Max
+            document.getElementById('topViolations').textContent = MAX_VIOLATIONS;
+            document.getElementById('violationCount').textContent = MAX_VIOLATIONS;
+
             // Disqualify
             fullscreenEnabled = false;
             document.getElementById('warningModal').style.display = 'none'; // Close warning if open
