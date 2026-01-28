@@ -27,12 +27,37 @@ window.addEventListener('DOMContentLoaded', async () => {
             }
         });
 
-        // Listen for Score Updates
+        // Listen for Score & Status Updates
         pRef.onSnapshot(doc => {
             const data = doc.data();
             if (data) {
+                // Sync Score
                 document.getElementById('score').textContent = `Score: ${data.score || 0}/145`;
-                // Optionally mark problems as solved in UI if reloaded
+
+                // Sync Violations
+                if (data.violations !== undefined) {
+                    violations = data.violations;
+                    document.getElementById('topViolations').textContent = violations;
+                    document.getElementById('violationCount').textContent = violations;
+                }
+
+                // Sync Status & Time
+                if (data.status === 'DISQUALIFIED') {
+                    if (fullscreenEnabled) {
+                        fullscreenEnabled = false;
+                        document.getElementById('disqualifyModal').style.display = 'flex';
+                        setTimeout(() => showCompletionMessage(), 3000);
+                    }
+                } else if (data.status === 'COMPLETED') {
+                    showCompletionMessage();
+                }
+
+                if (data.start_time) {
+                    // Handle Firestore Timestamp
+                    window.contestStartTime = data.start_time.toDate ? data.start_time.toDate() : new Date(data.start_time);
+                }
+
+                // Sync Solved Problems
                 if (data.solved) {
                     data.solved.forEach(pid => {
                         const item = document.querySelector(`.problem-item:nth-child(${pid})`);
@@ -779,50 +804,46 @@ async function updateScore() {
 }
 
 // Timer
+// Timer
 function startTimer() {
-    timerInterval = setInterval(async () => {
-        try {
-            const response = await fetch('/api/contest/status');
-            const status = await response.json();
+    // If we just clicked start, set local time immediately to avoid delay
+    if (!window.contestStartTime) window.contestStartTime = new Date();
 
-            if (status && status.is_active) {
-                const remaining = status.remaining_time;
+    timerInterval = setInterval(() => {
+        try {
+            if (!window.contestStartTime) return;
+
+            const now = new Date();
+            const elapsed = Math.floor((now - window.contestStartTime) / 1000);
+            const duration = 2 * 60 * 60; // 2 Hours in seconds
+            const remaining = duration - elapsed;
+
+            if (remaining >= 0) {
                 const hours = Math.floor(remaining / 3600);
                 const minutes = Math.floor((remaining % 3600) / 60);
                 const seconds = remaining % 60;
 
                 document.getElementById('timer').textContent =
                     `⏱ ${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-
-                // Sync violations
-                if (status.violation_count !== undefined) {
-                    document.getElementById('topViolations').textContent = status.violation_count;
-                }
-
-                if (remaining <= 0) {
-                    clearInterval(timerInterval);
-                    fullscreenEnabled = false;
-                    if (document.exitFullscreen) {
-                        try { await document.exitFullscreen(); } catch (e) { }
-                    }
-                    showCompletionMessage();
-                }
-            } else if (status && status.status === 'DISQUALIFIED') {
-                // Already disqualified
-                clearInterval(timerInterval);
-                fullscreenEnabled = false;
-                document.getElementById('disqualifyModal').style.display = 'flex';
-                setTimeout(() => showCompletionMessage(), 3000);
             } else {
+                // Time up
                 clearInterval(timerInterval);
                 fullscreenEnabled = false;
                 if (document.exitFullscreen) {
-                    try { await document.exitFullscreen(); } catch (e) { }
+                    try { document.exitFullscreen(); } catch (e) { }
+                }
+
+                // Update specific message or just end
+                if (typeof db !== 'undefined') {
+                    db.collection('participants').doc(PARTICIPANT_ID).update({
+                        status: 'COMPLETED',
+                        end_time: firebase.firestore.FieldValue.serverTimestamp()
+                    });
                 }
                 showCompletionMessage();
             }
         } catch (error) {
-            console.error('Error updating timer:', error);
+            console.error('Timer error:', error);
         }
     }, 1000);
 }
