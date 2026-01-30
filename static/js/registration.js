@@ -15,6 +15,14 @@ document.getElementById('registrationForm').addEventListener('submit', async (e)
     const userId = 'user_' + Math.random().toString(36).substr(2, 9);
 
     try {
+        // Check for duplicates first
+        // Note: This requires a composite index if combining with other filters, but simple where() is fine.
+        const existing = await db.collection('participants').where('email', '==', email).get();
+        if (!existing.empty) {
+            alert('This email is already registered. Please contact an organizer.');
+            return;
+        }
+
         // Direct Firestore Write (Serverless Scalability)
         const participantRef = db.collection('participants').doc(userId);
 
